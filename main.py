@@ -4,7 +4,8 @@ import pandas as pd
 import numpy as np
 import warnings
 from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LinearRegression, ElasticNet, SGDRegressor
+from sklearn.linear_model import LinearRegression, ElasticNet
+from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
 from utils import load_train_csv, load_unique_m_csv, getBest20Features
 from learning import train_test_and_analyse, test_ridge, test_lasso
 
@@ -12,7 +13,7 @@ from learning import train_test_and_analyse, test_ridge, test_lasso
 
 if __name__ == '__main__':
     # ignore warning messages
-    #warnings.filterwarnings("ignore")
+    warnings.filterwarnings("ignore")
 
     # Load and clean data
 
@@ -29,25 +30,24 @@ if __name__ == '__main__':
                             "gmean_atomic_mass", "wtd_gmean_atomic_mass", "wtd_range_atomic_mass", 
                             "wtd_mean_fie", "wtd_gmean_fie", "wtd_std_fie", "wtd_mean_Density", 
                             "wtd_range_Density", "gmean_ThermalConductivity", "wtd_range_Valence"]
-    
+
     data_df.drop(less_correlated_list, axis=1, inplace=True)
     print('Drop less correlated features from the dataframe')
 
+    # get train set and test set
     y_df = data_df['critical_temp']
     x_df = data_df.drop(['critical_temp'], axis=1, inplace=False)
+    x_train, x_test, y_train, y_test = train_test_split(x_df, y_df)
 
     # LinearRegression
     print('\nCreate LinearRegression model')
-    x_train, x_test, y_train, y_test = train_test_split(x_df, y_df)
-    lr1 = LinearRegression()
-    lr1 = train_test_and_analyse(lr1, x_train, x_test, y_train, y_test)
+    lr1 = train_test_and_analyse(LinearRegression(), x_train, x_test, y_train, y_test)
 
     #TODO
     print('\nCreate LinearRegression model with best 20 features')
     best_20_df = getBest20Features()
     new_x_train, new_x_test, new_y_train, new_y_test = train_test_split(best_20_df, y_df)
-    lr2 = LinearRegression()
-    lr2 = train_test_and_analyse(lr2, new_x_train, new_x_test, new_y_train, new_y_test)
+    lr2 = train_test_and_analyse(LinearRegression(), new_x_train, new_x_test, new_y_train, new_y_test)
 
     alpha_vals = [0, 0.1, 0.2, 0.5, 1, 2, 5, 10, 50, 100]
     test_ridge(alpha_vals, x_train, x_test, y_train, y_test)
@@ -58,12 +58,12 @@ if __name__ == '__main__':
 
     # ElasticNet
     print('\nCreate ElasticNet model')
-    x_train, x_test, y_train, y_test = train_test_split(x_df, y_df)
-    el_net = ElasticNet()
-    el_net = train_test_and_analyse(el_net, x_train, x_test, y_train, y_test)
+    el_net = train_test_and_analyse(ElasticNet(), x_train, x_test, y_train, y_test)
 
-    # SGDRegressor
-    print('\nCreate SGDRegressor model')
-    x_train, x_test, y_train, y_test = train_test_split(x_df, y_df)
-    sgd = SGDRegressor()
-    sgd = train_test_and_analyse(sgd, x_train, x_test, y_train, y_test)
+    # RandomForestRegressor
+    print('\nCreate RandomForestRegressor model')
+    rfr = train_test_and_analyse(RandomForestRegressor(), x_train, x_test, y_train, y_test)
+
+    # GradientBoostingRegressor
+    print('\nCreate GradientBoostingRegressor model')
+    gbr = train_test_and_analyse(GradientBoostingRegressor(), x_train, x_test, y_train, y_test)
