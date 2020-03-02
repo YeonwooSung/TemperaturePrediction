@@ -1,22 +1,25 @@
 import numpy as np
 import pandas as pd
 import os
+import sys
 
 
 
-def load_dataframe(file_path):
+def load_dataframe(file_path, debug_mode=False):
     if os.path.exists(file_path) and os.path.isfile(file_path):
         print('load dataframe from "{}"'.format(file_path))
     else:
         print('Invalid file path!')
         return None
     data_df = pd.read_csv(file_path)
-    print('dataframe.head(10) : ', data_df.head(10))
-    print('\ndataframe.shape : {}'.format(data_df.shape))
-    print('\ndataframe.info() : ')
-    data_df.info()
-    print('\ndataframe.describe() : ', data_df.describe())
-    print()
+
+    if debug_mode:
+        print('dataframe.head(10) : ', data_df.head(10))
+        print('\ndataframe.shape : {}'.format(data_df.shape))
+        print('\ndataframe.info() : ')
+        data_df.info()
+        print('\ndataframe.describe() : ', data_df.describe())
+        print()
 
     return data_df
 
@@ -50,9 +53,9 @@ def clean_NaN_for_unique_m(chem_df):
     return chem_df
 
 
-def load_train_csv():
+def load_train_csv(debug_mode=False):
     # Load data
-    data_df = load_dataframe('./data/train.csv')
+    data_df = load_dataframe('./data/train.csv', debug_mode)
 
     # Clean data
     # create lists by data type
@@ -95,9 +98,9 @@ def load_train_csv():
     return data_df
 
 
-def load_unique_m_csv():
+def load_unique_m_csv(debug_mode=False):
     # Load data
-    chem_df = load_dataframe('./data/unique_m.csv')
+    chem_df = load_dataframe('./data/unique_m.csv', debug_mode)
 
     # Clean data
     for feature in chem_df:
@@ -123,3 +126,21 @@ def getBest20Features():
     most_important_20_df = newData_df[most_important_list_20]
 
     return most_important_20_df
+
+
+if __name__ == '__main__':
+    if len(sys.argv) < 2:
+        print('Usage: python3 main.py <mode_number>')
+        exit(1)
+    try:
+        mode = int(sys.argv[1])
+        if mode > 3:
+            raise ValueError
+    except ValueError:
+        print('The first argument should be one of 1 ~ 5')
+        exit(1)
+    
+    if mode == 1:
+        load_train_csv(True)
+    else:
+        load_unique_m_csv(True)
