@@ -3,17 +3,32 @@
 import pandas as pd
 import numpy as np
 import warnings
+import math
+import sys
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression, ElasticNet
 from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
 from utils import load_train_csv, load_unique_m_csv, getBest20Features
-from learning import train_test_and_analyse, test_ridge, test_lasso
+from learning import train_test_and_analyse, test_ridge, test_lasso, make_pipeline_for_polynomial_regression
 
 
 
 if __name__ == '__main__':
     # ignore warning messages
     warnings.filterwarnings("ignore")
+
+    max_val = 7
+
+    if len(sys.argv) < 2:
+        print('Usage: python3 main.py <mode_number>')
+        exit(1)
+    try:
+        mode = int(sys.argv[1])
+        if mode > max_val:
+            raise ValueError
+    except ValueError:
+        print('The first argument should be one of 1 ~ {}'.format(max_val))
+        exit(1)
 
     # Load and clean data
 
@@ -39,31 +54,42 @@ if __name__ == '__main__':
     x_df = data_df.drop(['critical_temp'], axis=1, inplace=False)
     x_train, x_test, y_train, y_test = train_test_split(x_df, y_df)
 
-    # LinearRegression
-    print('\nCreate LinearRegression model')
-    lr1 = train_test_and_analyse(LinearRegression(), x_train, x_test, y_train, y_test)
+    if mode == 1:
+        # LinearRegression
+        print('\nCreate LinearRegression model')
+        lr1 = train_test_and_analyse(LinearRegression(), x_train, x_test, y_train, y_test)
 
-    #TODO
-    print('\nCreate LinearRegression model with best 20 features')
-    best_20_df = getBest20Features()
-    new_x_train, new_x_test, new_y_train, new_y_test = train_test_split(best_20_df, y_df)
-    lr2 = train_test_and_analyse(LinearRegression(), new_x_train, new_x_test, new_y_train, new_y_test)
+        #TODO
+        print('\nCreate LinearRegression model with best 20 features')
+        best_20_df = getBest20Features()
+        new_x_train, new_x_test, new_y_train, new_y_test = train_test_split(best_20_df, y_df)
+        lr2 = train_test_and_analyse(LinearRegression(), new_x_train, new_x_test, new_y_train, new_y_test)
 
-    alpha_vals = [0, 0.1, 0.2, 0.5, 1, 2, 5, 10, 50, 100]
-    test_ridge(alpha_vals, x_train, x_test, y_train, y_test)
-    test_ridge(alpha_vals, new_x_train, new_x_test, new_y_train, new_y_test) #TODO
+    elif mode == 2:
+        #TODO
+        alpha_vals = [0, 0.1, 0.2, 0.5, 1, 2, 5, 10, 50, 100]
+        test_ridge(alpha_vals, x_train, x_test, y_train, y_test)
+        test_ridge(alpha_vals, new_x_train, new_x_test, new_y_train, new_y_test) #TODO
 
-    test_lasso(alpha_vals, x_train, x_test, y_train, y_test)
-    test_lasso(alpha_vals, new_x_train, new_x_test, new_y_train, new_y_test) #TODO
+    elif mode == 3:
+        test_lasso(alpha_vals, x_train, x_test, y_train, y_test)
+        test_lasso(alpha_vals, new_x_train, new_x_test, new_y_train, new_y_test) #TODO
 
-    # ElasticNet
-    print('\nCreate ElasticNet model')
-    el_net = train_test_and_analyse(ElasticNet(), x_train, x_test, y_train, y_test)
+    elif mode == 4:
+        # ElasticNet
+        print('\nCreate ElasticNet model')
+        el_net = train_test_and_analyse(ElasticNet(), x_train, x_test, y_train, y_test)
 
-    # RandomForestRegressor
-    print('\nCreate RandomForestRegressor model')
-    rfr = train_test_and_analyse(RandomForestRegressor(), x_train, x_test, y_train, y_test)
+    elif mode == 5:
+        # LinearRegression with PolynomialFeature
+        make_pipeline_for_polynomial_regression(x_train, x_test, y_train, y_test)
 
-    # GradientBoostingRegressor
-    print('\nCreate GradientBoostingRegressor model')
-    gbr = train_test_and_analyse(GradientBoostingRegressor(), x_train, x_test, y_train, y_test)
+    elif mode == 6:
+        # RandomForestRegressor
+        print('\nCreate RandomForestRegressor model')
+        rfr = train_test_and_analyse(RandomForestRegressor(), x_train, x_test, y_train, y_test)
+
+    elif mode == 7:
+        # GradientBoostingRegressor
+        print('\nCreate GradientBoostingRegressor model')
+        gbr = train_test_and_analyse(GradientBoostingRegressor(), x_train, x_test, y_train, y_test)
