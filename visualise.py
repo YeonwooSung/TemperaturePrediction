@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import warnings
+import sys
 from utils import load_train_csv, load_unique_m_csv
 
 
@@ -80,12 +81,29 @@ if __name__ == '__main__':
     # ignore warning messages
     warnings.filterwarnings("ignore")
 
+    max_val = 3
+
+    if len(sys.argv) < 2:
+        print('Usage: python3 main.py <mode_number>')
+        exit(1)
+    try:
+        mode = int(sys.argv[1])
+        if mode > max_val:
+            raise ValueError
+    except ValueError:
+        print('The first argument should be one of 1 ~ {}'.format(max_val))
+        exit(1)
+
     # Load and clean data
     data_df = load_train_csv()
     chem_df = load_unique_m_csv()
 
     x_df = data_df.drop('critical_temp', axis=1, inplace=False)
-    generate_regplot(data_df, x_df)
+    #TODO y_df = data_df['critical_temp']
 
-    #TODO plotCorrelationMatrix(data_df, 20, 'train.csv')
-    #TODO plotCorrelationMatrix(chem_df, 20, 'unique_m.csv')
+    if mode == 1:
+        plotCorrelationMatrix(data_df, 20, 'train.csv')
+    elif mode == 2:
+        plotCorrelationMatrix(chem_df, 20, 'unique_m.csv')
+    elif mode == 3:
+        generate_regplot(data_df, x_df)

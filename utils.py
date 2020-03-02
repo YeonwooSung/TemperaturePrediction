@@ -137,9 +137,9 @@ if __name__ == '__main__':
         if mode > 3:
             raise ValueError
     except ValueError:
-        print('The first argument should be one of 1 ~ 5')
+        print('The first argument should be either 1 or 2')
         exit(1)
-    
+
     if mode == 1:
         load_train_csv(True)
     else:
