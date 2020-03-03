@@ -92,10 +92,10 @@ if __name__ == '__main__':
     x_train, x_test, y_train, y_test = train_test_split(x_df, y_df)
 
     # lists of hyper parameters
-    n_estimators = [100, 200, 500, 1000, 2000]
-    max_depth = [10, 20, 30, 50, 100]
+    n_estimators = [100, 200, 500, 1000]
+    max_depth = [10, 20, 50, 100]
     bootstrap = [True, False]
-    learning_rate = [0.05, 0.1, 0.15, 0.2, 0.25, 0.3]
+    learning_rate = [0.05, 0.1, 0.2, 0.3]
 
 
     # use GridSearchCV to find the best hyperparameters
