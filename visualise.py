@@ -7,7 +7,7 @@ import sys
 from utils import load_train_csv, load_unique_m_csv
 
 
-#54 > x
+#TODO comment (description)
 def generate_regplot(data_df, x_df, fig_size=(12, 30), n_cols=3, n_rows=27):
     fig, axs = plt.subplots(figsize=fig_size, ncols=n_cols, nrows=n_rows)
     for i, feature in enumerate(x_df.columns):
@@ -21,12 +21,19 @@ def generate_regplot(data_df, x_df, fig_size=(12, 30), n_cols=3, n_rows=27):
 
 # Correlation matrix
 def plotCorrelationMatrix(df, graphWidth, filename):
-    df = df.dropna('columns') # drop columns with NaN
-    df = df[[col for col in df if df[col].nunique() > 1]] # keep columns where there are more than 1 unique values
+    # drop columns with NaN
+    df = df.dropna('columns')
+    # keep columns where there are more than 1 unique values
+    df = df[[col for col in df if df[col].nunique() > 1]]
+
     if df.shape[1] < 2:
         print(f'No correlation plots shown: The number of non-NaN or constant columns ({df.shape[1]}) is less than 2')
         return
+
+    # get the correlational matrix
     corr = df.corr()
+
+    # plot the figure
     plt.figure(num=None, figsize=(graphWidth, graphWidth), dpi=80, facecolor='w', edgecolor='k')
     corrMat = plt.matshow(corr, fignum = 1)
     plt.xticks(range(len(corr.columns)), corr.columns, rotation=90)
@@ -69,7 +76,7 @@ if __name__ == '__main__':
     max_val = 5
 
     if len(sys.argv) < 2:
-        print('Usage: python3 main.py <mode_number>')
+        print('Usage: python3 visualise.py <mode_number>')
         exit(1)
     try:
         mode = int(sys.argv[1])
@@ -82,6 +89,8 @@ if __name__ == '__main__':
     # Load and clean data
     data_df = load_train_csv()
     chem_df = load_unique_m_csv()
+
+    #TODO df.hist() -> histogram
 
     if mode == 1:
         plotCorrelationMatrix(data_df, 20, 'train.csv')

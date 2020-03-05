@@ -130,7 +130,7 @@ def getBest20Features():
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
-        print('Usage: python3 main.py <mode_number>')
+        print('Usage: python3 utils.py <mode_number>')
         exit(1)
     try:
         mode = int(sys.argv[1])
