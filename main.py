@@ -9,7 +9,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression, ElasticNet
 from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
 from utils import load_train_csv, load_unique_m_csv, getBest20Features
-from learning import train_test_and_analyse, test_ridge, test_lasso, make_pipeline_for_polynomial_regression
+from learning import *
 
 
 
@@ -17,7 +17,7 @@ if __name__ == '__main__':
     # ignore warning messages
     warnings.filterwarnings("ignore")
 
-    max_val = 7
+    max_val = 9
 
     if len(sys.argv) < 2:
         print('Usage: python3 main.py <mode_number>')
@@ -59,6 +59,9 @@ if __name__ == '__main__':
     # a list of alpha values that are used for the regularisation
     alpha_vals = [0, 0.1, 0.2, 0.5, 1, 2, 5, 10, 50, 100]
 
+
+    # create, train, and test model
+
     if mode == 1:
         # mode 1 => LinearRegression
 
@@ -95,6 +98,7 @@ if __name__ == '__main__':
 
         print('\nCreate ElasticNet model with a set of suggested features')
         train_test_and_analyse(ElasticNet(), new_x_train, new_x_test, new_y_train, new_y_test)
+
     elif mode == 5:
         # mode 5 => LinearRegression with PolynomialFeature
 
@@ -111,7 +115,8 @@ if __name__ == '__main__':
         train_test_and_analyse(RandomForestRegressor(), x_train, x_test, y_train, y_test)
 
         print('\nCreate RandomForestRegressor model with a set of suggested features')
-        train_test_and_analyse(ElasticNet(), new_x_train, new_x_test, new_y_train, new_y_test)
+        train_test_and_analyse(RandomForestRegressor(), new_x_train, new_x_test, new_y_train, new_y_test)
+
     elif mode == 7:
         # mode 7 => GradientBoostingRegressor
 
@@ -120,3 +125,29 @@ if __name__ == '__main__':
 
         print('\nCreate GradientBoostingRegressor model with a set of suggested features')
         train_test_and_analyse(GradientBoostingRegressor(), new_x_train, new_x_test, new_y_train, new_y_test)
+
+    elif mode == 8:
+        # Print out coefficient values of LinearRegression model and ElasticNet model
+        models = [LinearRegression(), ElasticNet()]
+
+        print('\n\nGet coefficient values - Trained with a set of suggested features')
+        for model in models:
+            print('\nmodel = {}'.format(type(model).__name__))
+            model.fit(x_train, y_train)
+            getCoefficientValues(model, x_df)
+
+        print('\n\nGet coefficient values - Trained with a set of suggested features')
+        for model in models:
+            print('\nmodel = {}'.format(type(model).__name__))
+            model.fit(new_x_train, new_y_train)
+            getCoefficientValues(model, best_20_df)
+
+
+    elif mode == 9:
+        # K-Fold cross validation
+
+        # a list of models to test
+        models = [LinearRegression(), ElasticNet(), GradientBoostingRegressor(), RandomForestRegressor()]
+        # do the cross validation with the K-Fold
+        for model in models:
+            train_test_and_analyse_with_kfold(model, data_df, x_df, y_df)
