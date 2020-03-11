@@ -9,7 +9,7 @@ from utils import load_train_csv, load_unique_m_csv
 
 
 
-def plotScatterMatrix(data_df, x_df, n_cols=3, n_rows=27, path='./scatter_regplot.png'):
+def plot_regplots(data_df, x_df, n_cols=3, n_rows=27, path='./regplot1.png'):
     """
     Plot the scatter matrix by using regplots.
     The generated plot will be saved as image file instead of displaying plots.
@@ -98,11 +98,11 @@ if __name__ == '__main__':
         plotCorrelationMatrix(data_df, 20, 'train.csv')
     elif mode == 2:
         x_df = data_df.drop('critical_temp', axis=1, inplace=False)
-        plotScatterMatrix(data_df, x_df)
+        plot_regplots(data_df, x_df)
     elif mode == 3:
         plotCorrelationMatrix(chem_df, 20, 'unique_m.csv')
     elif mode == 4:
         x_df = chem_df.drop('critical_temp', axis=1, inplace=False)
         x_df = x_df.select_dtypes(include=[np.number])
         num_of_rows = math.ceil(x_df.shape[1] / 3)
-        plotScatterMatrix(chem_df, x_df, n_cols=3, n_rows=num_of_rows, path='./scatter_unique_m.png')
+        plot_regplots(chem_df, x_df, n_cols=3, n_rows=num_of_rows, path='./regplot2.png')

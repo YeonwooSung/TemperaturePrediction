@@ -3,13 +3,14 @@ import pandas as pd
 import time
 import warnings
 import sys
+import matplotlib.pyplot as plt
 from sklearn.metrics import mean_squared_error, r2_score
-from sklearn.linear_model import Ridge, Lasso, LinearRegression
+from sklearn.linear_model import Ridge, Lasso, LinearRegression, ElasticNet
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.pipeline import make_pipeline
-from sklearn.model_selection import cross_val_score, train_test_split, GridSearchCV, KFold
+from sklearn.model_selection import cross_val_score, train_test_split, KFold
 from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
-from utils import load_train_csv
+from utils import load_train_csv, getBest20Features, filterFeaturesByCorrelationMatrix
 
 
 
@@ -19,7 +20,7 @@ def train_test_and_analyse(model, x_train, x_test, y_train, y_test):
     mse = mean_squared_error(y_test, y_preds)
     rmse = np.sqrt(mse)
     variance_score = r2_score(y_test, y_preds)
-    print('MSE = {0:.3f}\nRMSE = {1:.3f}\nVariance score = {2:.3f}'.format(mse, rmse, variance_score))
+    print('MSE = {0:.3f}\nRMSE = {1:.3f}\nR2 score = {2:.3f}'.format(mse, rmse, variance_score))
     
     return model
 
@@ -53,6 +54,10 @@ def train_test_and_analyse_with_kfold(model, df, x_df, y_df, num_of_splits=5):
 
 
 def test_ridge(alpha_vals, x_train, x_test, y_train, y_test):
+    """
+    Train the ridge model with the given dataset.
+    Then, call the train_test_and_analyse() function for the evaluation.
+    """
     print('\nCreate and test Ridge models')
     for alpha_val in alpha_vals:
         print('Ridge(alpha={})'.format(alpha_val))
@@ -62,7 +67,11 @@ def test_ridge(alpha_vals, x_train, x_test, y_train, y_test):
 
 
 def test_lasso(alpha_vals, x_train, x_test, y_train, y_test):
-    print('\nCreate and test Ridge models')
+    """
+    Train the lasso model with the given dataset.
+    Then, call the train_test_and_analyse() function for the evaluation.
+    """
+    print('\nCreate and test Lasso models')
     for alpha_val in alpha_vals:
         print('Lasso(alpha={})'.format(alpha_val))
         lasso = Lasso(alpha=alpha_val)
@@ -71,6 +80,10 @@ def test_lasso(alpha_vals, x_train, x_test, y_train, y_test):
 
 
 def make_pipeline_for_polynomial_regression(x_train, x_test, y_train, y_test, degrees=[1, 2]):
+    """
+    Makes a pipeline with PolynomialFeatures and LinearRegression, so that the user could perform
+    the polynomial regression.
+    """
     for degree in degrees:
         print('Linear Regression with PolynomialFeatures - degree={}'.format(degree))
         model = make_pipeline(PolynomialFeatures(degree), LinearRegression())
@@ -86,42 +99,45 @@ def getCoefficientValues(model, x_df):
     print(coeff)
 
 
-def cross_validate_gridsearch(model, params, x_train, x_test, y_train, y_test):
-    start_t = time.time()
-    print('===============================================================')
-    print('GridSearchCV for {}'.format(type(model).__name__))
-    total_n_of_combs = 1
-    for key in params:
-        total_n_of_combs = total_n_of_combs * len(params[key])
-    print('The number of all combinations of hyperparameters: {}'.format(total_n_of_combs))
-    g_cv = GridSearchCV(model, params, cv=5)
-    g_cv.fit(x_train, y_train)
+def visualise_3_linear_models(x_df1, x_df2, x_df3, y_df, fig_name1='selected manually', fig_name2='selected automatically', fig_name3='suggested features', file_name='./linear_regressions.png'):
+    fig, (ax1, ax2, ax3) = plt.subplots(figsize=(16, 4), ncols=3)
 
-    print('===============================================================')
-    print('Result from GridSearchCV')
-    print('===============================================================')
-    print('The best estimator: ', g_cv.best_estimator_)
-    print('\nThe best parameters across ALL searched params: ', g_cv.best_params_)
-    print('\nThe best score across ALL searched params: {}'.format(g_cv.best_score_))
-    print('\nTotal cost time = {0:.2f}'.format(time.time() - start_t))
-    print('===============================================================')
+    ax1.set_title(fig_name1)
+    lr1 = LinearRegression()
+    lr1.fit(x_df1, y_df)
+    ax1.scatter(y_df, lr1.predict(x_df1), c='b')
+    ax1.plot(y_df, y_df, c='m')
+
+    ax2.set_title(fig_name2)
+    lr2 = LinearRegression()
+    lr2.fit(x_df2, y_df)
+    ax2.scatter(y_df, lr2.predict(x_df2), c='b')
+    ax2.plot(y_df, y_df, c='m')
+
+    ax3.set_title(fig_name3)
+    lr3 = LinearRegression()
+    lr3.fit(x_df3, y_df)
+    ax3.scatter(y_df, lr3.predict(x_df3), c='b')
+    ax3.plot(y_df, y_df, c='m')
+
+    # Save plot to image file instead of displaying
+    fig.savefig(file_name)
+
 
 
 if __name__ == '__main__':
     # ignore warning messages
     warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-    max_val = 3
-
     if len(sys.argv) < 2:
-        print('Usage: python3 learning.py <mode_number>')
+        print('Usage: python3 utils.py <mode_number>')
         exit(1)
     try:
         mode = int(sys.argv[1])
-        if mode > max_val:
+        if mode > 3:
             raise ValueError
     except ValueError:
-        print('The first argument should be one of 1 ~ {}'.format(max_val))
+        print('The first argument should be one of 1, 2, and 3')
         exit(1)
 
 
@@ -139,52 +155,46 @@ if __name__ == '__main__':
 
     data_df.drop(less_correlated_list, axis=1, inplace=True)
 
-    # get train set and test set
+    # extract answer column from a dataframe
     y_df = data_df['critical_temp']
-    x_df = data_df.drop(['critical_temp'], axis=1, inplace=False)
-    x_train, x_test, y_train, y_test = train_test_split(x_df, y_df)
+
+
+    # get dataframes that are filtered with correlation values
+    filtered_df1 = filterFeaturesByCorrelationMatrix()
 
 
     if mode == 1:
-        print()
-    
+        # Visualise 3 linear regression model where the first model is trained with the
+        # subset of features that are selected manually, the second model is trained with the
+        # suggested features, and the third model is trined with the subset of features that are
+        # selected automatically.
+
+        # get train set and test set
+        x_df = data_df.drop(['critical_temp'], axis=1, inplace=False)
+        x_train, x_test, y_train, y_test = train_test_split(x_df, y_df)
+        best_20_df = getBest20Features()
+
+        # visualise 3 linear regression models, where each model is trained with different set of features
+        visualise_3_linear_models(x_df, filtered_df1, best_20_df, y_df)
+
+
     elif mode == 2:
-        # Validate the ensemble model with GridSearchCV
+        # Cross validation for 3 subsets of automatically selected features, where
+        # all 3 of them uses different threshold value for choosing features.
 
-        # lists of hyper parameters
-        n_estimators = [100, 200, 500, 1000]
-        max_depth = [10, 50, 100]
-        bootstrap = [True, False]
+        filtered_df2 = filterFeaturesByCorrelationMatrix(cor_thres=0.15)
+        filtered_df3 = filterFeaturesByCorrelationMatrix(cor_thres=0.2)
 
-        # use GridSearchCV to find the best hyperparameters
+        # visualise 3 linear regression models, where each model is trained with different set of features
+        visualise_3_linear_models(filtered_df1, filtered_df2, filtered_df3, y_df, fig_name1='correlation_thres=0.1', fig_name2='correlation_thres=0.15', fig_name3='correlation_thres=0.2', file_name='./cor_linear_regression.png')
 
-        params_rfr = {
-            'n_estimators': n_estimators,
-            'max_depth': max_depth,
-            'bootstrap': bootstrap
-        }
-        cross_validate_gridsearch(RandomForestRegressor(), params_rfr, x_train, x_test, y_train, y_test)
 
-        #TODO
-        learning_rate = [0.1, 0.2, 0.3]
-        params_gbr = {
-            'learning_rate': learning_rate,
-            'n_estimators': n_estimators,
-            'max_depth': max_depth
-        }
-        cross_validate_gridsearch(GradientBoostingRegressor(), params_gbr, x_train, x_test, y_train, y_test)
+    else:
+        # Cross validation for 3 subsets of automatically selected features, where
+        # all 3 of them uses different threshold value for choosing features.
 
-    elif mode == 3:
-        # Validate the ensemble model with GridSearchCV
+        filtered_df2 = filterFeaturesByCorrelationMatrix(thres=0.55)
+        filtered_df3 = filterFeaturesByCorrelationMatrix(thres=0.6)
 
-        # lists of hyper parameters
-        n_estimators = [100, 200, 500, 1000]
-        max_depth = [10, 50, 100]
-        learning_rate = [0.1, 0.2, 0.3]
-
-        params_gbr = {
-            'learning_rate': learning_rate,
-            'n_estimators': n_estimators,
-            'max_depth': max_depth
-        }
-        cross_validate_gridsearch(GradientBoostingRegressor(), params_gbr, x_train, x_test, y_train, y_test)
+        # visualise 3 linear regression models, where each model is trained with different set of features
+        visualise_3_linear_models(filtered_df1, filtered_df2, filtered_df3, y_df, fig_name1='threshld=0.5', fig_name2='threshld=0.55', fig_name3='threshld=0.6', file_name='./thres_linear_regression.png')

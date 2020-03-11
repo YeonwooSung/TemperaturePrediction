@@ -57,11 +57,14 @@ def load_train_csv(debug_mode=False):
     # Load data
     data_df = load_dataframe('./data/train.csv', debug_mode)
 
+
     # Clean data
-    # create lists by data type
+
+    # a list of columns that are integer type
     intFeatures = ['number_of_elements',
                    'range_atomic_radius', 'range_Valence']
 
+    # a list of columns that are float type
     floatFeatures = ['mean_atomic_mass', 'wtd_mean_atomic_mass',
                      'gmean_atomic_mass', 'wtd_gmean_atomic_mass', 'entropy_atomic_mass',
                      'wtd_entropy_atomic_mass', 'range_atomic_mass', 'wtd_range_atomic_mass',
@@ -128,6 +131,65 @@ def getBest20Features():
     return most_important_20_df
 
 
+def filterFeaturesByCorrelationMatrix(thres=0.5, cor_thres=0.1, debug=False):
+    """
+    Gets the features that correlate with the critical_temp most.
+    Then, filters out the features that correlate with each other to get only with the independent variables.
+
+    :param thres:     The threshold value of correlation with the critical_temp
+    :param cor_thres: The threshold value of choosing independent variables
+    :param debug:     Boolean value to check if the function should print out the debugging message
+
+    :return: A dataframe with selected features
+    """
+    df = load_train_csv()
+
+    # get the correlational matrix
+    corr = df.corr()
+    cor_target = corr['critical_temp']
+
+    # Select highly correlated features that the abstract value of the correlation value is greater than the threshold value
+    relevant_features = []
+
+    # iterate all target features
+    for index, i in enumerate(cor_target):
+        if abs(i) > thres and df.columns[index] != 'critical_temp':
+            relevant_features.append(df.columns[index])
+
+
+    # As the assumption in the Linear Regression is that the independent variables must not be
+    # correlated with each other, we take one feature and remove the other.
+
+    independent_features = []
+    removed_features = []
+
+    for feature_1 in relevant_features:
+        for feature_2 in relevant_features:
+            if feature_1 in removed_features:
+                break
+            if feature_1 == feature_2 or feature_2 in removed_features:
+                continue
+
+            correlation = df[[feature_1, feature_2]].corr()
+            feature_correlation = abs(correlation[feature_1])
+
+            if feature_correlation[1] <= cor_thres:
+                independent_features.append(feature_2)
+            elif feature_1 not in independent_features and feature_2 not in independent_features:
+                removed_features.append(feature_2)
+                independent_features.append(feature_1)
+
+    # remove duplications by converting to set
+    independent_features = list(set(independent_features))
+
+    if debug:
+        print('\nIndependent features : ', independent_features)
+        print('\nRemoved features : ', removed_features)
+
+    return df[independent_features]
+
+
+
 if __name__ == '__main__':
     if len(sys.argv) < 2:
         print('Usage: python3 utils.py <mode_number>')
@@ -137,10 +199,12 @@ if __name__ == '__main__':
         if mode > 3:
             raise ValueError
     except ValueError:
-        print('The first argument should be either 1 or 2')
+        print('The first argument should be one of 1, 2, and 3')
         exit(1)
 
     if mode == 1:
         load_train_csv(True)
-    else:
+    elif mode == 2:
         load_unique_m_csv(True)
+    else:
+        filterFeaturesByCorrelationMatrix(debug=True)
