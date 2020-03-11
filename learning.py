@@ -15,6 +15,10 @@ from utils import load_train_csv, getBest20Features, filterFeaturesByCorrelation
 
 
 def train_test_and_analyse(model, x_train, x_test, y_train, y_test):
+    """
+    Train the given model with given dataset.
+    Then, evalutate the given model by calculating MSE, RMSE, and R^2 score.
+    """
     model.fit(x_train, y_train)
     y_preds = model.predict(x_test)
     mse = mean_squared_error(y_test, y_preds)
@@ -26,6 +30,9 @@ def train_test_and_analyse(model, x_train, x_test, y_train, y_test):
 
 
 def train_test_and_analyse_with_kfold(model, df, x_df, y_df, num_of_splits=5):
+    """
+    Run the K-Fold validation testing for the given model.
+    """
     kfold = KFold(n_splits=num_of_splits)
     n_iter = 1
     cv_accuracy = []

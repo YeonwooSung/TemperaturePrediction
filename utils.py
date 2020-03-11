@@ -54,6 +54,9 @@ def clean_NaN_for_unique_m(chem_df):
 
 
 def load_train_csv(debug_mode=False):
+    """
+    Load data from train.csv file.
+    """
     # Load data
     data_df = load_dataframe('./data/train.csv', debug_mode)
 
@@ -102,6 +105,9 @@ def load_train_csv(debug_mode=False):
 
 
 def load_unique_m_csv(debug_mode=False):
+    """
+    Load the data from unique_m.csv file.
+    """
     # Load data
     chem_df = load_dataframe('./data/unique_m.csv', debug_mode)
 
@@ -115,6 +121,9 @@ def load_unique_m_csv(debug_mode=False):
 
 
 def getBest20Features():
+    """
+    Get the best 20 features that the paper suggested
+    """
     most_important_list_20 = ["range_ThermalConductivity", "wtd_std_ThermalConductivity", "range_atomic_radius",
                               "wtd_gmean_ThermalConductivity", "std_ThermalConductivity", "wtd_entropy_Valence",
                               "wtd_std_ElectronAffinity", "wtd_entropy_atomic_mass", "wtd_mean_Valence",
